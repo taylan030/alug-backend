@@ -3,6 +3,23 @@
 // Production Ready Version with Health Endpoint
 // ============================================
 
+// ============================================
+// STARTUP DEBUG - MUST BE FIRST!
+// ============================================
+console.error('=== SERVER STARTING ===');
+console.error('Node version:', process.version);
+console.error('Working directory:', process.cwd());
+console.error('Environment:', process.env.NODE_ENV);
+
+process.on('uncaughtException', (err) => {
+  console.error('❌ UNCAUGHT EXCEPTION:', err);
+  process.exit(1);
+});
+
+process.on('unhandledRejection', (err) => {
+  console.error('❌ UNHANDLED REJECTION:', err);
+});
+
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
