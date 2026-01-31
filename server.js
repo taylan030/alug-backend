@@ -65,6 +65,15 @@ app.get('/api/health', async (req, res) => {
   }
 });
 
+// Simple test endpoint
+app.get('/', (req, res) => {
+  res.send('Backend is running!');
+});
+
+app.get('/test', (req, res) => {
+  res.json({ message: 'Test successful', timestamp: new Date() });
+});
+
 // ============================================
 // DATABASE CONNECTION
 // ============================================
