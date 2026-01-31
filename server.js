@@ -3,23 +3,6 @@
 // Production Ready Version with Health Endpoint
 // ============================================
 
-// ============================================
-// STARTUP DEBUG - MUST BE FIRST!
-// ============================================
-console.error('=== SERVER STARTING ===');
-console.error('Node version:', process.version);
-console.error('Working directory:', process.cwd());
-console.error('Environment:', process.env.NODE_ENV);
-
-process.on('uncaughtException', (err) => {
-  console.error('❌ UNCAUGHT EXCEPTION:', err);
-  process.exit(1);
-});
-
-process.on('unhandledRejection', (err) => {
-  console.error('❌ UNHANDLED REJECTION:', err);
-});
-
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
@@ -58,6 +41,28 @@ app.use((req, res, next) => {
   res.setHeader('X-Frame-Options', 'DENY');
   res.setHeader('X-XSS-Protection', '1; mode=block');
   next();
+});
+
+// ============================================
+// HEALTH CHECK ENDPOINT - MUST BE FIRST!
+// ============================================
+app.get('/api/health', async (req, res) => {
+  try {
+    console.error('Health check called');
+    res.json({ 
+      status: 'ok', 
+      timestamp: new Date().toISOString(),
+      port: PORT,
+      env: process.env.NODE_ENV
+    });
+  } catch (err) {
+    console.error('Health check error:', err);
+    res.status(500).json({ 
+      status: 'error', 
+      timestamp: new Date().toISOString(),
+      error: err.message
+    });
+  }
 });
 
 // ============================================
@@ -218,29 +223,6 @@ const isAdmin = (req, res, next) => {
   }
   next();
 };
-
-// ============================================
-// HEALTH CHECK ENDPOINT (MUST BE FIRST!)
-// ============================================
-app.get('/api/health', async (req, res) => {
-  try {
-    // Test database connection
-    const result = await pool.query('SELECT NOW()');
-    res.json({ 
-      status: 'ok', 
-      timestamp: new Date().toISOString(),
-      database: 'connected',
-      dbTime: result.rows[0].now
-    });
-  } catch (err) {
-    res.status(500).json({ 
-      status: 'error', 
-      timestamp: new Date().toISOString(),
-      database: 'disconnected',
-      error: err.message
-    });
-  }
-});
 
 // ============================================
 // AUTH ROUTES
@@ -892,6 +874,8 @@ app.use((err, req, res, next) => {
 // ============================================
 // START SERVER
 // ============================================
-app.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
+app.listen(PORT, '0.0.0.0', () => {
+  console.error(`🚀 Server running on port ${PORT}`);
+  console.error(`✅ Health endpoint: http://0.0.0.0:${PORT}/api/health`);
+  console.error(`✅ Listening on all interfaces (0.0.0.0)`);
 });
