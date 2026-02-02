@@ -345,17 +345,16 @@ app.get('/api/products/:id', async (req, res) => {
 app.post('/api/products', authenticateToken, isAdmin, async (req, res) => {
   try {
     const { name, description, price, priceValue, type, commissionType, commissionValue, category, imageData, productUrl } = req.body;
-
+    
     const result = await pool.query(
-      `INSERT INTO products (name, description, price, price_value, type, commission_type, commission_value, category, image_data, product_url)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING *`,
+      'INSERT INTO products (name, description, price, price_value, type, commission_type, commission_value, category, image_data, product_url) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING *',
       [name, description, price, priceValue, type, commissionType, commissionValue, category, imageData, productUrl]
     );
-
+    
     res.json(result.rows[0]);
   } catch (err) {
-    console.error('Error creating product:', err);
-    res.status(500).json({ error: 'Failed to create product' });
+    console.error('Product creation error:', err.message);
+    res.status(500).json({ error: err.message });
   }
 });
 
