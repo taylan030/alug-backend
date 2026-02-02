@@ -886,4 +886,4 @@ app.listen(PORT, '0.0.0.0', () => {
   console.error(`🚀 Server running on port ${PORT}`);
   console.error(`✅ Health endpoint: http://0.0.0.0:${PORT}/api/health`);
   console.error(`✅ Listening on all interfaces (0.0.0.0)`);
-});
+});# force redeploy
