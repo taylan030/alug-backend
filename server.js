@@ -238,8 +238,9 @@ const isAdmin = (req, res, next) => {
 // ============================================
 app.post('/api/auth/register', async (req, res) => {
   try {
-    const { name, email, password } = req.body;
+    const { email, password } = req.body;
 
+    // 1. Check ob User schon existiert
     const existingUser = await pool.query(
       'SELECT * FROM users WHERE email = $1',
       [email]
@@ -249,21 +250,27 @@ app.post('/api/auth/register', async (req, res) => {
       return res.status(400).json({ error: 'Email already registered' });
     }
 
+    // 2. Password hashen
     const hashedPassword = await bcrypt.hash(password, 12);
 
+    // 3. User erstellen
     const result = await pool.query(
-      'INSERT INTO users (name, email, password, is_admin) VALUES ($1, $2, $3, $4) RETURNING id, name, email, is_admin',
-      [name, email, hashedPassword, false]
+      'INSERT INTO users (email, password, role) VALUES ($1, $2, $3) RETURNING id, email, role',
+      [email, hashedPassword, 'user']
     );
 
-    const user = result.rows[0];
+    // 4. JWT Token erstellen
     const token = jwt.sign(
-      { userId: user.id, email: user.email, isAdmin: user.is_admin },
-      process.env.JWT_SECRET || 'default-secret-key',
-      { expiresIn: process.env.JWT_EXPIRES_IN || '7d' }
+      { userId: result.rows[0].id, role: result.rows[0].role },
+      process.env.JWT_SECRET,
+      { expiresIn: '24h' }
     );
 
-    res.json({ token, user });
+    res.json({
+      token,
+      user: result.rows[0]
+    });
+
   } catch (err) {
     console.error('Registration error:', err);
     res.status(500).json({ error: 'Registration failed' });
