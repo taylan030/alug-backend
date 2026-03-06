@@ -875,6 +875,41 @@ app.put('/api/admin/payouts/:id', authenticateToken, isAdmin, async (req, res) =
 });
 
 // ============================================
+// AFFILIATE REDIRECT ROUTE
+// ============================================
+app.get('/aff/:code', async (req, res) => {
+  try {
+    const { code } = req.params;
+
+    const result = await pool.query(
+      `SELECT al.id, p.product_url 
+       FROM affiliate_links al
+       JOIN products p ON al.product_id = p.id
+       WHERE al.link_code = $1`,
+      [code]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).send('Link not found');
+    }
+
+    const { id, product_url } = result.rows[0];
+
+    // Click tracken
+    await pool.query(
+      'INSERT INTO clicks (link_id, ip_address, user_agent) VALUES ($1, $2, $3)',
+      [id, req.ip, req.headers['user-agent']]
+    );
+
+    // Weiterleiten zum echten Produkt
+    res.redirect(product_url);
+  } catch (err) {
+    console.error('Redirect error:', err);
+    res.status(500).send('Error');
+  }
+});
+
+// ============================================
 // ERROR HANDLING
 // ============================================
 app.use((err, req, res, next) => {
