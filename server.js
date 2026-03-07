@@ -776,7 +776,8 @@ app.get('/aff/:code', async (req, res) => {
       [id, req.ip, req.headers['user-agent']]
     );
 
-    res.redirect(product_url);
+    const separator = product_url.includes('?') ? '&' : '?';
+res.redirect(`${product_url}${separator}alug_code=${code}`);
   } catch (err) {
     console.error('Redirect error:', err);
     res.status(500).send('Error');
